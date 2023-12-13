@@ -6,7 +6,18 @@
 #define OK       0
 #define NO_INPUT 1
 #define TOO_LONG 2
+#define TIE 3
 // TODO: More defines for board masks and shifts
+
+const int winConditions[8] = {0b111, 0b111000, 0b111000000,
+                              0b100100100, 0b010010010, 0b001001001,
+                              0b100010001, 0b001010100};
+
+
+const int boardOneMask = 0b00000000000000000000000111111111;
+const int boardTwoMask = 0b00000001111111110000000000000000;
+const int boardsMask   = boardOneMask | boardTwoMask;
+const int boardShift = 16;
 
 const char D_BOARD_S[3][3][1] = {{'1','2','3'},{'4','5','6'},{'7','8','9'}};
 
@@ -75,7 +86,7 @@ void printBoard(uint32_t bb)
         {
             moveRaw = (bb >> 8 - ((i*3)+j));
             move1 = moveRaw & 1;
-            move2 = (moveRaw >> 16) & 1;
+            move2 = (moveRaw >> boardShift) & 1;
             if (move1 != 0)
             {
                 ch[j] = 'X';
@@ -96,6 +107,41 @@ void printBoard(uint32_t bb)
     }
 }
 
+int getAvailableMoves(int board) {
+    return ~board & boardsMask;
+}
+
+int isMoveValid(int board, int move) {
+    int moves = getAvailableMoves(board);
+    return (move & moves) ? 1 : 0;
+}
+
+int move(int board, int move) {
+    int valid = isMoveValid(board, move);
+    if (!valid) { return board; }
+    return board + move;
+}
+
+int checkForWin(int board) {
+    int trimmedBoard;
+    int isWinner;
+
+    int boards[2] = { board & boardOneMask,
+                     (board & boardTwoMask) >> boardShift };
+    
+    for (size_t b = 0; b < 2; b++) {
+        for (size_t win = 0; win < 8; win++) {
+            trimmedBoard = boards[b] & winConditions[win];
+            isWinner = trimmedBoard == winConditions[win];
+            
+            //if (isWinner) { return b + 1; }
+        }
+    }
+
+    if (!getAvailableMoves(board)) { return TIE; }
+
+}
+
 int main()
 {
     printf("\nWelcome to Tic Tac Toe in C!\n");
@@ -104,7 +150,11 @@ int main()
     //int comp = get_player_two_computer();
     //printf("%d\n", comp);
     uint32_t bb = 0b10100000000010001000000001000000;
+    bb = move(bb, 0b10 << boardShift);
+    bb = move(bb, 0b10000 << boardShift);
+    bb = move(bb, 0b10000000 << boardShift);
     printBoard(bb);
+    printf("winner: %d\n", checkForWin(bb));
 
     return 0;
 }
