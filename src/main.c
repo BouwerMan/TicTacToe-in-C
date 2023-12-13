@@ -18,7 +18,9 @@ const int winConditions[8] = {0b111, 0b111000, 0b111000000,
 const int boardOneMask = 0b00000000000000000000000111111111;
 const int boardTwoMask = 0b00000001111111110000000000000000;
 const int boardsMask   = boardOneMask | boardTwoMask;
+const int playersMask =  0b01100000000000000000000000000000;
 const int boardShift = 16;
+const int playerShift = 29;
 
 const char D_BOARD_S[3][3][1] = {{'1','2','3'},{'4','5','6'},{'7','8','9'}};
 
@@ -116,11 +118,12 @@ int isMoveValid(int *board, int move) {
     return (move & ~moves) ? 1 : 0;
 }
 
+// Returns success value
 int makeMove(int *board, int move) {
     int valid = isMoveValid(board, move);
-    if (!valid) { return 1; }
+    if (!valid) { return 0; }
     *board = *board + move;
-    return 0;
+    return 1;
 }
 
 int checkForWin(int board) {
@@ -141,6 +144,7 @@ int checkForWin(int board) {
 
     if (!getAvailableMoves(board)) { return TIE; }
 
+    return 0;
 }
 
 /** Mainly used for tests. Translates board square 1-9 to bitboard move */
@@ -154,7 +158,8 @@ int getUserMove(int player) {
     // Buffer of 2 keeps it at 1 digit for ease + /0
     char buff[2];
     int st, moveRaw, move;
-    char *prmpt = "Please select your move: ";
+    char prmpt[] = "Player X, Please select your move: ";
+    prmpt[7] = player + '0';
     int validInput = 0, validMove = 0;
     while (!validInput) {
         memset(buff, 0, sizeof(buff));
@@ -169,6 +174,9 @@ int getUserMove(int player) {
         case OK:
             if (isdigit(buff[0])) {
                 validInput = 1;
+            } else if ((buff[0] == 'q') || (buff[0] == 'Q')) {
+                // Checks for quit command.
+                return -1;
             } else {
                 printf("Input is not valid or is not a number.\n\n");
             }
@@ -183,28 +191,58 @@ int getUserMove(int player) {
     return move;
 }
 
+int getPlayer(int* restrict board) {
+    int playerBits = (*board) & playersMask;
+    return playerBits >> playerShift;
+}
+
+void setPlayer(int* board, int player) {
+    // Effectively sets both player bits to 0 allowing for replacement
+    int playerBits = (*board) & ~playersMask;
+
+    // Shifts player bits to left and uses mask to trim extra bits
+    int newPlayer = (player << playerShift) & playersMask;
+
+    (*board) = playerBits | newPlayer;
+}
+
 int main() {
     printf("\nWelcome to Tic Tac Toe in C!\n");
 
     //! Will mess with this later, want to make board work first.
     //int comp = get_player_two_computer();
     //printf("%d\n", comp);
-    int bb = 0b10100000000010001000000001000000;
+    int bb = 0b10100000000000001000000000000000;
     int move;
-    makeMove(&bb, 0b10 << boardShift);
-    makeMove(&bb, 0b10000 << boardShift);
-    makeMove(&bb, 0b10000000 << boardShift);
-    printBoard(bb);
+    // makeMove(&bb, 0b10 << boardShift);
+    // makeMove(&bb, 0b10000 << boardShift);
+    // makeMove(&bb, 0b10000000 << boardShift);
+
+    char in[2] = {0};
+    int player, newPlayer;
 
     while (1) {
-        move = getUserMove(1);
-        if (isMoveValid(&bb, move)) { break; }
-        printf("Invalid move.\n");
-    }
+        printBoard(bb);
+        player = getPlayer(&bb);
+        //? Check for computer player?
+        move = getUserMove(player);
+        if (move == -1) { break; }
+        if (!isMoveValid(&bb, move)) {
+            printf("Invalid move.\n");  
+            continue;
+        }
+        (void) makeMove(&bb, move);
 
-    makeMove(&bb, move);
-    printBoard(bb);
-    printf("winner: %d\n", checkForWin(bb));
+        if (checkForWin(bb) != 0) {
+            printBoard(bb);
+            printf("Player %d won!\n", player);
+            break;
+        }
+
+        // Iterating turn
+        newPlayer = ~player & 0b11;
+        setPlayer(&bb, newPlayer);
+    }
 
     return 0;
 }
