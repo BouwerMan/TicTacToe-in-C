@@ -11,7 +11,7 @@ extern const int playersMask;
 extern const int boardShift;
 extern const int playerShift;
 
-extern const char D_BOARD_S[3][3][1];
+extern const char D_BOARD_S[3][3];
 
 /** Prints Board (bb) */
 void printBoard(const int board);

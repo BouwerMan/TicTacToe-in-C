@@ -16,8 +16,9 @@ const int boardTwoMask = 0b00000001111111110000000000000000;
 const int boardsMask   = boardOneMask | boardTwoMask;
 const int playersMask =  0b01100000000000000000000000000000;
 const int playerShift = 29;
+const int boardShift = 16;
 
-const char D_BOARD_S[3][3][1] = {{'1','2','3'},{'4','5','6'},{'7','8','9'}};
+const char D_BOARD_S[3][3] = {{'1','2','3'},{'4','5','6'},{'7','8','9'}};
 
 
 // Lmao literally wtf is this
@@ -30,7 +31,7 @@ void printBoard(const int board) {
     {
         for (int j = 0; j < 3; j++)
         {
-            moveRaw = (board >> 8 - ((i*3)+j));
+            moveRaw = board >> (8 - ((i*3)+j));
             move1 = moveRaw & 1;
             move2 = (moveRaw >> boardShift) & 1;
             if (move1 != 0)
@@ -43,7 +44,7 @@ void printBoard(const int board) {
             }
             else
             {
-                ch[j] = D_BOARD_S[i][j][0];
+                ch[j] = D_BOARD_S[i][j];
             }
         }
 
@@ -68,7 +69,7 @@ int isMoveValid(const int board, int move) {
 
 // Returns success value
 int makeMove(int *board, const int move) {
-    int valid = isMoveValid(board, move);
+    int valid = isMoveValid(*board, move);
     if (!valid) { return 0; }
     *board = *board + move;
     return 1;

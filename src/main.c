@@ -65,7 +65,7 @@ int getUserMove(int player) {
     int st, moveRaw, move;
     char prmpt[] = "Player X, Please select your move: ";
     prmpt[7] = player + '0';
-    int validInput = 0, validMove = 0;
+    int validInput = 0;
     while (!validInput) {
         memset(buff, 0, sizeof(buff));
         st = getInput(prmpt, buff, sizeof(buff));
@@ -108,7 +108,6 @@ int main() {
     // makeMove(&bb, 0b10000 << boardShift);
     // makeMove(&bb, 0b10000000 << boardShift);
 
-    char in[2] = {0};
     int player, newPlayer;
 
     while (1) {
