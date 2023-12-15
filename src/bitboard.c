@@ -6,12 +6,6 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-#define OK       0
-#define NO_INPUT 1
-#define TOO_LONG 2
-#define TIE 3
-// TODO: More defines for board masks and shifts
-
 const int winConditions[8] = {0b111, 0b111000, 0b111000000,
                               0b100100100, 0b010010010, 0b001001001,
                               0b100010001, 0b001010100};
@@ -21,7 +15,6 @@ const int boardOneMask = 0b00000000000000000000000111111111;
 const int boardTwoMask = 0b00000001111111110000000000000000;
 const int boardsMask   = boardOneMask | boardTwoMask;
 const int playersMask =  0b01100000000000000000000000000000;
-const int boardShift = 16;
 const int playerShift = 29;
 
 const char D_BOARD_S[3][3][1] = {{'1','2','3'},{'4','5','6'},{'7','8','9'}};
@@ -29,7 +22,7 @@ const char D_BOARD_S[3][3][1] = {{'1','2','3'},{'4','5','6'},{'7','8','9'}};
 
 // Lmao literally wtf is this
 // Again assumes 3x3 board with 2 players only
-void printBoard(int bb) {
+void printBoard(const int board) {
     char ch[3];
     int moveRaw, move1, move2;
 
@@ -37,7 +30,7 @@ void printBoard(int bb) {
     {
         for (int j = 0; j < 3; j++)
         {
-            moveRaw = (bb >> 8 - ((i*3)+j));
+            moveRaw = (board >> 8 - ((i*3)+j));
             move1 = moveRaw & 1;
             move2 = (moveRaw >> boardShift) & 1;
             if (move1 != 0)
@@ -60,13 +53,13 @@ void printBoard(int bb) {
     }
 }
 
-int getAvailableMoves(int board) {
+int getAvailableMoves(const int board) {
     return (~board) & boardsMask;
 }
 
-int isMoveValid(int *board, int move) {
-    int boardOne = (*board) & boardOneMask;
-    int boardTwo = ((*board) & boardTwoMask) >> boardShift;
+int isMoveValid(const int board, int move) {
+    int boardOne = board & boardOneMask;
+    int boardTwo = (board & boardTwoMask) >> boardShift;
     int moves = boardOne | boardTwo;
     // Moves depending on who played it.
     if (move > 0x8000) { move = move >> boardShift; }
@@ -74,14 +67,14 @@ int isMoveValid(int *board, int move) {
 }
 
 // Returns success value
-int makeMove(int *board, int move) {
+int makeMove(int *board, const int move) {
     int valid = isMoveValid(board, move);
     if (!valid) { return 0; }
     *board = *board + move;
     return 1;
 }
 
-int checkForWin(int board) {
+int checkForWin(const int board) {
     int trimmedBoard;
     int isWinner;
 
@@ -103,17 +96,17 @@ int checkForWin(int board) {
 }
 
 /** Mainly used for tests. Translates board square 1-9 to bitboard move */
-int parseInput(int input, int player) {
+int parseInput(const int input, const int player) {
     int move = 1 << (8 - (input - 1));
     return move << (boardShift * (player - 1));
 }
 
-int getPlayer(int* restrict board) {
-    int playerBits = (*board) & playersMask;
+int getPlayer(const int board) {
+    int playerBits = board & playersMask;
     return playerBits >> playerShift;
 }
 
-void setPlayer(int* board, int player) {
+void setPlayer(int* restrict board, int player) {
     // Effectively sets both player bits to 0 allowing for replacement
     int playerBits = (*board) & ~playersMask;
 
