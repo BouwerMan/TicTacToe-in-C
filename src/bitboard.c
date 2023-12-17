@@ -55,7 +55,9 @@ void printBoard(const int board) {
 }
 
 int getAvailableMoves(const int board) {
-    return (~board) & boardsMask;
+    int boardOne = board & boardOneMask;
+    int boardTwo = (board & boardTwoMask) >> boardShift;
+    return ~(boardOne | boardTwo) & boardOneMask;
 }
 
 int isMoveValid(const int board, int move) {

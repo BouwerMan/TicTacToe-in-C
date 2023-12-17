@@ -108,9 +108,8 @@ int main() {
     // makeMove(&bb, 0b10 << boardShift);
     // makeMove(&bb, 0b10000 << boardShift);
     // makeMove(&bb, 0b10000000 << boardShift);
-
+    printf("%d\n", MAX(0, -10));
     int player, newPlayer;
-
     while (1) {
         printBoard(bb);
         player = getPlayer(bb);
