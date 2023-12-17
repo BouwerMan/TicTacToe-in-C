@@ -5,6 +5,7 @@
 #include <stdlib.h>
 
 #include "bitboard.h"
+#include "comp.h"
 
 #define OK       0
 #define NO_INPUT 1
@@ -113,11 +114,14 @@ int main() {
     while (1) {
         printBoard(bb);
         player = getPlayer(bb);
-        //? Check for computer player?
-        move = getUserMove(player);
+        if (player == 2) {
+            move = genMove(bb);
+        } else {
+            move = getUserMove(player);
+        }
         if (move == -1) { break; }
         if (!isMoveValid(bb, move)) {
-            printf("Invalid move.\n");  
+            printf("Invalid move.\n");
             continue;
         }
         (void) makeMove(&bb, move);
